@@ -47,18 +47,39 @@ fn main() {
     println!("Text written to file!");
 }```
 ### Handling Incoming Pipe Message
-```use std::io::{self, Read};
+```use std::io::{self, BufReader};
 use std::fs::File;
+use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::FromRawFd;
 
 fn main() -> io::Result<()> {
-    let mut file = File::open("/tmp/my_pipe")?;
-    let mut buffer = String::new();
-    file.read_to_string(&mut buffer)?;
-    println!("Received message from pipe: {}", buffer.trim());
+    let pipe_path = "/tmp/my_pipe";
+    let file = File::open(pipe_path)?;
+    let fd = file.as_raw_fd();
+    let mut reader = BufReader::new(unsafe { File::from_raw_fd(fd) });
+
+    loop {
+        let mut buffer = String::new();
+        match reader.read_line(&mut buffer) {
+            Ok(bytes_read) => {
+                if bytes_read == 0 {
+                    // End of file, pipe has been closed
+                    break;
+                }
+                println!("Received message from pipe: {}", buffer.trim());
+            }
+            Err(_) => {
+                // Error occurred, break out of the loop
+                break;
+            }
+        }
+    }
 
     Ok(())
 }
 ```
+Unsafe is required as fd is not associated with ownership and required for low level programming
+
 ### Sending PHP HTTP endpoint
 ```
 use std::collections::HashMap;
