@@ -39,7 +39,7 @@ fn main() {
         .skip(1)
         .next()
         .expect("A file argument was not provided");
-    let c = config::parse_json_file(f);
+    let c = config::parse_toml_file(f);
     // Vi & Sageru channels
     let (sageru_sender, sageru_reciever) = mpsc::channel::<String>();
     let (vi_sender, vi_reciever) = mpsc::channel::<String>();

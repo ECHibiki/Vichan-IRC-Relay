@@ -1,5 +1,38 @@
 The following examples were output by ChatGPT. They were used as a basis for writting the program:
 
+### Parsing a TOML file
+
+```
+use std::fs::File;
+use std::io::Read;
+use toml::Value;
+
+fn main() {
+    // Open the toml file
+    let mut file = File::open("example.toml").expect("Failed to open file");
+
+    // Read the contents of the file into a string
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Failed to read file");
+
+    // Parse the toml string into a value
+    let value: Value = toml::from_str(&contents).expect("Failed to parse toml");
+
+    // Print the parsed value
+    println!("{:#?}", value);
+}
+```
+
+```
+[package]
+name = "my_project"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+toml = "0.7.3"
+
+```
 ### Parsing a JSON file
 
 ```

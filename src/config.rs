@@ -1,7 +1,7 @@
 
 use std::fs::File;
 use std::io::Read;
-use serde_json;
+use toml;
 
 #[derive(Debug)]
 pub struct Config{
@@ -16,21 +16,21 @@ pub struct Config{
     
 }
 
-pub fn parse_json_file(p:String) -> Config{
+pub fn parse_toml_file(p:String) -> Config{
     let mut h:File = File::open(p).expect("Config file could not be opened");
     let mut f:String = String::new();
     h.read_to_string(&mut f).expect("Config File could not be read");
 
-    let j:serde_json::Value = serde_json::from_str(&f).expect("Failed to parse JSON");
+    let j:toml::Value = toml::from_str(&f).expect("Failed to parse TOML");
     
-    let a = j.get("about_arg").expect("about_arg not found in JSON");
-    let u = j.get("sageru_url").expect("sageru_url not found in JSON");
-    let n = j.get("sageru_name").expect("sageru_name not found in JSON");
-    let c = j.get("sageru_channel").expect("sageru_channel not found in JSON");
+    let a = j.get("about_arg").expect("about_arg not found in TOML");
+    let u = j.get("sageru_url").expect("sageru_url not found in TOML");
+    let n = j.get("sageru_name").expect("sageru_name not found in TOML");
+    let c = j.get("sageru_channel").expect("sageru_channel not found in TOML");
     
-    let pipe = j.get("vichan_pipe_uri").expect("vichan_pipe_uri not found in JSON");
-    let post= j.get("vichan_post_url").expect("vichan_post_url not found in JSON");
-    let verif= j.get("verification_pass").expect("verification_pass not found in JSON");
+    let pipe = j.get("vichan_pipe_uri").expect("vichan_pipe_uri not found in TOML");
+    let post= j.get("vichan_post_url").expect("vichan_post_url not found in TOML");
+    let verif= j.get("verification_pass").expect("verification_pass not found in TOML");
 
     Config{ 
         about_arg: a.to_string(),
