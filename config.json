@@ -1,0 +1,10 @@
+{
+    "about_arg":"!relay",
+    "sageru_url": "irc.sageru.org:6667",
+    "sageru_name": "Kissu-Relay",
+    "sageru_channel":"#qa",
+    
+    "vichan_pipe_uri": "/tmp/virelaypipe",
+    "vichan_post_url": "localhost/relaypipe.php",
+    "verification_pass": "12345"
+}

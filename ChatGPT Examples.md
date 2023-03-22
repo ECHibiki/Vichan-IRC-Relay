@@ -1,5 +1,54 @@
 The following examples were output by ChatGPT. They were used as a basis for writting the program:
 
+### Parsing a JSON file
+
+```
+use std::fs::File;
+use std::io::Read;
+use serde_json::Value;
+
+fn main() {
+    // Open the JSON file
+    let mut file = File::open("example.json").expect("Failed to open file");
+
+    // Read the contents of the file into a string
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).expect("Failed to read file");
+
+    // Parse the JSON string into a value
+    let value: Value = serde_json::from_str(&contents).expect("Failed to parse JSON");
+
+    // Print the parsed value
+    println!("{:#?}", value);
+}
+```
+
+```
+[package]
+name = "my_project"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+serde_json = "1.0"
+
+```
+
+### Environment variables
+
+```
+use std::env;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    if let Some(first_arg) = args.get(1) {
+        println!("The first argument is: {}", first_arg);
+    } else {
+        println!("No arguments were provided.");
+    }
+}
+```
+
 ### Handling Socket Requests
 ```
 use std::io::{BufRead, BufReader, Write};
@@ -126,4 +175,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+```
+
+### Creating Channels
+
+```
+use std::sync::mpsc;
+
+// Define a function that takes a sender and a message to send
+fn send_message(sender: mpsc::Sender<String>, message: String) {
+    // Send the message through the sender
+    sender.send(message).unwrap();
+}
+
+fn main() {
+    // Create a channel with a capacity of 10
+    let (sender, receiver) = mpsc::channel::<String>();
+
+    // Spawn a new thread to send a message
+    std::thread::spawn(move || {
+        let message = String::from("Hello, world!");
+        send_message(sender, message);
+    });
+
+    // Receive the message through the receiver
+    let received = receiver.recv().unwrap();
+    println!("Received message: {}", received);
+}
+
 ```

@@ -1,5 +1,11 @@
 mod sageru;
 mod vichan;
+mod config;
+
+use std::{thread, env};
+use std::sync::mpsc;
+
+
 
 /// Launch the function, initiating a connection to IRC Sageru, passing the handler and a channel IO into another thread where it loops and waits for new inputs on the IRC.
 /// Upon a certain chat message (!relay) it writes to the channel the channel info and connected thread(As obtained by communication with the Vichan API post endpoint). 
@@ -28,5 +34,22 @@ mod vichan;
 /// The Vichan file creates a pipe which is written to from vichan.
 /// In the future this program will be incorperated into the Tsukuyomi imageboard engine as part of it's ability to integrate with IM networks outside of it's own internatal one
 fn main() {
-    println!("Hello, world!");
+    // Get and parse config json
+    let f:String = env::args()
+        .skip(1)
+        .next()
+        .expect("A file argument was not provided");
+    let c = config::parse_json_file(f);
+    // Vi & Sageru channels
+    let (sageru_sender, sageru_reciever) = mpsc::channel::<String>();
+    let (vi_sender, vi_reciever) = mpsc::channel::<String>();
+
+    // start threads with channels and config borrow
+    sageru::start(&c , sageru_sender , vi_reciever);
+    vichan::start(&c , vi_sender , sageru_reciever);
+
+    // no need for the main thread
+    println!("Vichan-Sageru relay initialization finished. Waiting for termination.");
+    thread::park();
 }
+
