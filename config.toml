@@ -1,13 +1,17 @@
 
 # When called it will output a message and retrieve the destination thread from vichan
 about_arg = "!relay"
+about_notice = "Kissu-Relay connected to "
 
 #IRC configuration
-sageru_url = "irc.sageru.org:6667"
-sageru_name = "Kissu-Relay"
-sageru_channel = "#qa"
+sageru_url = "irc.sageru.org"
+sageru_port = 6667
+sageru_name = "KissuRelay"
+sageru_channel = "#test"
 
 #Post server destination and authentication
-vichan_pipe_uri = "/tmp/virelaypipe"
-vichan_post_url = "http://localhost/relaypipe.php"
+vichan_pipe_uri = "/tmp/irc_pipe"
+vichan_post_url = "https://kissu.moe:443"
+vichan_post_fn = "/ircrelay.php"
+vichan_post_rate = 0
 verification_pass = "12345"

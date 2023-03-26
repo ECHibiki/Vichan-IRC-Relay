@@ -237,3 +237,21 @@ fn main() {
 }
 
 ```
+
+### Rust Threading
+
+```use std::thread;
+
+fn main() {
+    let handle = thread::spawn(|| {
+        // code to run in the new thread
+        println!("Hello from the new thread!");
+    });
+
+    // Wait for the new thread to finish executing
+    handle.join().unwrap();
+
+    // Code in the main thread continues executing after the new thread has finished
+    println!("Hello from the main thread!");
+}
+```

@@ -1,45 +1,37 @@
-
+use serde::Deserialize;
 use std::fs::File;
 use std::io::Read;
 use toml;
+use reqwest;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Config{
-    about_arg: String,
-    sageru_url: String,
-    sageru_name: String,
-    sageru_channel:String,
+    pub about_arg: String,
+    pub about_notice: String,
+
+    pub sageru_url: String,
+    pub sageru_port: u16,
+    pub sageru_name: String,
+    pub sageru_channel:String,
     
-    vichan_pipe_uri: String,
-    vichan_post_url: String,
-    verification_pass:String
-    
+    pub vichan_pipe_uri: String,
+    pub vichan_post_url: String,
+    pub vichan_post_fn: String,
+    pub vichan_post_rate: u64,
+    pub verification_pass:String
 }
 
 pub fn parse_toml_file(p:String) -> Config{
     let mut h:File = File::open(p).expect("Config file could not be opened");
     let mut f:String = String::new();
     h.read_to_string(&mut f).expect("Config File could not be read");
-
-    let j:toml::Value = toml::from_str(&f).expect("Failed to parse TOML");
     
-    let a = j.get("about_arg").expect("about_arg not found in TOML");
-    let u = j.get("sageru_url").expect("sageru_url not found in TOML");
-    let n = j.get("sageru_name").expect("sageru_name not found in TOML");
-    let c = j.get("sageru_channel").expect("sageru_channel not found in TOML");
-    
-    let pipe = j.get("vichan_pipe_uri").expect("vichan_pipe_uri not found in TOML");
-    let post= j.get("vichan_post_url").expect("vichan_post_url not found in TOML");
-    let verif= j.get("verification_pass").expect("verification_pass not found in TOML");
-
-    Config{ 
-        about_arg: a.to_string(),
-        sageru_url: u.to_string(),
-        sageru_name: n.to_string(),
-        sageru_channel: c.to_string(),
-        
-        vichan_pipe_uri: pipe.to_string(),
-        vichan_post_url: post.to_string(),
-        verification_pass: verif.to_string(),
-    }
+    let mut config:Config = toml::from_str(&f).expect("Failed to parse TOML");
+    let r = reqwest::blocking::Client::new()
+        .get(config.vichan_post_url.to_owned() + &config.vichan_post_fn)
+        .send()
+        .unwrap();
+    config.about_notice = format!("{} {}" , config.about_notice , r.text().unwrap().trim());
+    println!("{}" , config.about_notice);
+    config
 }
