@@ -21,16 +21,27 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
             println!("PIPE OPEN {}" ,  pipe);
             let mut fo:Option<File> = None;
             while let None = fo  {
-                if let Ok(f) = OpenOptions::new()
+                println!("Open Op");
+                match  OpenOptions::new()
                 .read(true)
                 .open(pipe.to_owned()) {
-                    fo = Some(f);
+                    Ok(f) => {
+                        println!("Pipe found");
+                        fo = Some(f);   
+                    },
+                    Err(e) => {
+                        println!("{e}");
+                    }
                 }
             }
             
             let mut pipe_file = fo.unwrap();
             let mut output = String::new();
             while let Ok(_) = pipe_file.read_to_string(&mut output) {
+                if output == "" {
+                    continue
+                }
+                println!("{output}");
                 match vi_sender.send( output.to_owned()) {
                     Ok(_) =>{},
                     Err(e) => {println!("Board Vi => IRC Failed: {e}")}

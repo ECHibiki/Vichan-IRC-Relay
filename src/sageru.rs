@@ -37,14 +37,19 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                 if is_linkbot(&line){
                     
                 } else if is_about(&line , &chan,  &about) {
-                    if let Err(_) = w_read.lock().unwrap().write(format!("PRIVMSG {} :{}\r\n", chan , about_msg).as_bytes()) {
+                    println!("ABOUT CHECK");
+                    let mut about_writter = w_read.lock().unwrap(); 
+                    if let Err(_) = about_writter.write(format!("PRIVMSG {} :{}\r\n", chan , about_msg).as_bytes()) {
                         println!("Could not write to about response");
                     } else{
-                        _ = w_read.lock().unwrap().flush();
+                        println!("Z");
+                        _ = about_writter.flush();
+                        println!("Y");
                     }
                 } else if is_chatter(&line) {
-                    log.write_all(line.as_bytes()).unwrap_or(println!("Could not write to log"));
-                    
+                    if let Err(_) = log.write_all(line.as_bytes()){
+                        println!("Could not write to log");
+                    };
                     match sageru_sender.send(line.to_owned()){
                         Err(e) => println!("Sageru - IRC => Vi Failed: {}", e),
                         __ => {}
@@ -64,10 +69,14 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
         loop {
             match vi_reciever.recv(){
                 Ok(m) => {
-                    if let Err(_) = w_write.lock().unwrap().write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
+                    let m = m.replace("\n", ". ")
+                        .replace("\r", "");
+                    let m = "14Kissu.Relay: ".to_string() + &m;
+                    let mut vi_writter = w_write.lock().unwrap();
+                    if let Err(_) = vi_writter.write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
                         println!("Could not write to about response");
                     } else{
-                        _ = w_write.lock().unwrap().flush();
+                        _ = vi_writter.flush();
                     }
                 },
                 Err(e) => {
@@ -85,6 +94,7 @@ fn is_chatter(message:&str) -> bool{
 }
 
 fn is_about(message:&str , chan:&str , cmd:&str) -> bool{
+    println!("Check about");
     message.starts_with(&format!(":Anonymous!~anonymous@unknown PRIVMSG {} :{}" , chan , cmd))
 }
 
