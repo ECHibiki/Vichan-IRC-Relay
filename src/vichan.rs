@@ -17,26 +17,29 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
     // Wait on pipe
     let pipe = c.vichan_pipe_uri.to_owned();
     thread::spawn(move || {
-        println!("PIPE OPEN {}" ,  pipe);
-        let mut fo:Option<File> = None;
-        while let None = fo  {
-            if let Ok(f) = OpenOptions::new()
-            .read(true)
-            .open(pipe.to_owned()) {
-                fo = Some(f);
+        loop {
+            println!("PIPE OPEN {}" ,  pipe);
+            let mut fo:Option<File> = None;
+            while let None = fo  {
+                if let Ok(f) = OpenOptions::new()
+                .read(true)
+                .open(pipe.to_owned()) {
+                    fo = Some(f);
+                }
             }
+            
+            let mut pipe_file = fo.unwrap();
+            let mut output = String::new();
+            while let Ok(_) = pipe_file.read_to_string(&mut output) {
+                match vi_sender.send( output.to_owned()) {
+                    Ok(_) =>{},
+                    Err(e) => {println!("Board Vi => IRC Failed: {e}")}
+                }; 
+                output.clear();
+            }
+            println!("PIPE CLOSE");
         }
         
-        let mut pipe_file = fo.unwrap();
-        let mut output = String::new();
-        while let Ok(_) = pipe_file.read_to_string(&mut output) {
-            match vi_sender.send( output.to_owned()) {
-                Ok(_) =>{},
-                Err(e) => {println!("Board Vi => IRC Failed: {e}")}
-            }; 
-            output.clear();
-        }
-        println!("PIPE CLOSE");
     });
 
     // Wait on Sageru
@@ -78,12 +81,15 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
             .send();
             let f = async {
                 match message.await{
-                    Ok(m) => println!("{} - {}" , m.status() , m.text().await.unwrap() ), 
+                    Ok(_m) => (), //println!("{} - {}" , m.status() , m.text().await.unwrap() ), 
                     Err(e) => println!("{e}") 
                 }
             };
-            let rt = Runtime::new().unwrap();
-            rt.block_on(f);    
+            let rt = Runtime::new();
+            match rt {
+                Ok(ru) => ru.block_on(f),
+                Err(e) => println!("{e}")            
+            }
         }
     });
     

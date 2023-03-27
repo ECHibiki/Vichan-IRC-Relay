@@ -103,3 +103,6 @@
 :Anonymous!~anonymous@unknown PRIVMSG #test :kk
 :Anonymous!~anonymous@unknown PRIVMSG #test :wasn't sure if it was good or not
 :Anonymous!~anonymous@unknown PRIVMSG #test :2,3fdfdfddf
+:Anonymous!~anonymous@unknown PRIVMSG #test :asdf
+:Anonymous!~anonymous@unknown PRIVMSG #test :1234
+:Anonymous!~anonymous@unknown PRIVMSG #test :vvv

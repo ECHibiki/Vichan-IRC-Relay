@@ -31,24 +31,30 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
     thread::spawn(move || {
         println!("Waiting for Sageru Messages");
         let mut line = String::new();
-        while let Ok(_) = reader.read_line(&mut line) {
-            print!("IRC: {}", line);
-            if is_linkbot(&line){
-
-            } else if is_about(&line , &chan,  &about) {
-                w_read.lock().unwrap().write(format!("PRIVMSG {} :{}\r\n", chan , about_msg).as_bytes()).expect("Could not write to about response");
-                w_read.lock().unwrap().flush().unwrap();
-            } else if is_chatter(&line) {
-                log.write_all(line.as_bytes()).expect("Could not write to log");
-                
-                match sageru_sender.send(line.to_owned()){
-                    Err(e) => println!("Sageru - IRC => Vi Failed: {}", e),
-                    __ => {}
+        loop {
+            if let Ok(_) = reader.read_line(&mut line) {
+                print!("IRC: {}", line);
+                if is_linkbot(&line){
+                    
+                } else if is_about(&line , &chan,  &about) {
+                    if let Err(_) = w_read.lock().unwrap().write(format!("PRIVMSG {} :{}\r\n", chan , about_msg).as_bytes()) {
+                        println!("Could not write to about response");
+                    } else{
+                        _ = w_read.lock().unwrap().flush();
+                    }
+                } else if is_chatter(&line) {
+                    log.write_all(line.as_bytes()).unwrap_or(println!("Could not write to log"));
+                    
+                    match sageru_sender.send(line.to_owned()){
+                        Err(e) => println!("Sageru - IRC => Vi Failed: {}", e),
+                        __ => {}
+                    }
                 }
+                line.clear();
+            }else{
+                println!("IRC is down!");
             }
-            line.clear();
-        }
-        panic!("IRC Thread abruptly terminated");
+        } 
     });
 
     // Write from Vi
@@ -58,11 +64,14 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
         loop {
             match vi_reciever.recv(){
                 Ok(m) => {
-                    w_write.lock().unwrap().write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()).expect("Could not write to test response");
-                    w_write.lock().unwrap().flush().unwrap();
+                    if let Err(_) = w_write.lock().unwrap().write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
+                        println!("Could not write to about response");
+                    } else{
+                        _ = w_write.lock().unwrap().flush();
+                    }
                 },
                 Err(e) => {
-                    // println!("Vi => IRC Reciever Failed: {}" , e);
+                    println!("Vi => IRC Reciever Failed: {}" , e);
                 }
             }
         }
