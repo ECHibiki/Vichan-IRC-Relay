@@ -33,18 +33,14 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
         let mut line = String::new();
         loop {
             if let Ok(_) = reader.read_line(&mut line) {
-                print!("IRC: {}", line);
-                if is_linkbot(&line){
-                    
+                if is_ignored(&line){
+    
                 } else if is_about(&line , &chan,  &about) {
-                    println!("ABOUT CHECK");
                     let mut about_writter = w_read.lock().unwrap(); 
                     if let Err(_) = about_writter.write(format!("PRIVMSG {} :{}\r\n", chan , about_msg).as_bytes()) {
                         println!("Could not write to about response");
                     } else{
-                        println!("Z");
                         _ = about_writter.flush();
-                        println!("Y");
                     }
                 } else if is_chatter(&line) {
                     if let Err(_) = log.write_all(line.as_bytes()){
@@ -71,7 +67,7 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                 Ok(m) => {
                     let m = m.replace("\n", ". ")
                         .replace("\r", "");
-                    let m = "14Kissu.Relay: ".to_string() + &m;
+                    let m = "14Kissu-Chat: ".to_string() + &m;
                     let mut vi_writter = w_write.lock().unwrap();
                     if let Err(_) = vi_writter.write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
                         println!("Could not write to about response");
@@ -94,11 +90,10 @@ fn is_chatter(message:&str) -> bool{
 }
 
 fn is_about(message:&str , chan:&str , cmd:&str) -> bool{
-    println!("Check about");
     message.starts_with(&format!(":Anonymous!~anonymous@unknown PRIVMSG {} :{}" , chan , cmd))
 }
 
-fn is_linkbot (message: &str ) -> bool{
+fn is_ignored (message: &str ) -> bool{
     message.contains("@ kissu.moe")
 }
 
@@ -110,7 +105,7 @@ fn connect(url:  &str, port: &u16, name:&str, channel:&str) -> ( BufReader<TcpSt
     writeln!(stream, "NICK {}", name).expect("IRC Nick error");
     writeln!(stream, "USER {} 0 * :{}", name, name).expect("IRC User error");
     writeln!(stream, "JOIN {}", channel).expect("IRC Chan Join error");
-    writeln!(stream, "PRIVMSG {} :{}", channel , "startup test-FN" ).expect("IRC Chan Join error");
+    writeln!(stream, "PRIVMSG {} :{}", channel , "14Kissu-Chat Ver0.0 (3!relay14 for info)" ).expect("IRC Chan Join error");
     
     ( BufReader::new(stream.try_clone().unwrap()) , BufWriter::new(stream.try_clone().unwrap()))
 }

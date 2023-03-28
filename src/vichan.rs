@@ -21,7 +21,6 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
             println!("PIPE OPEN {}" ,  pipe);
             let mut fo:Option<File> = None;
             while let None = fo  {
-                println!("Open Op");
                 match  OpenOptions::new()
                 .read(true)
                 .open(pipe.to_owned()) {
@@ -29,8 +28,8 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
                         println!("Pipe found");
                         fo = Some(f);   
                     },
-                    Err(e) => {
-                        println!("{e}");
+                    Err(_e) => {
+                        // println!("{e}");
                     }
                 }
             }
@@ -41,7 +40,6 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
                 if output == "" {
                     continue
                 }
-                println!("{output}");
                 match vi_sender.send( output.to_owned()) {
                     Ok(_) =>{},
                     Err(e) => {println!("Board Vi => IRC Failed: {e}")}
@@ -62,7 +60,6 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
         loop {
             match sageru_reciever.recv() {
                 Ok(m) => {
-                    println!("Waiter REC");
                     queue.lock().unwrap().push(m);
                 },
                 Err(e) => {println!("Board - IRC => Vi Failed: {e}")}
@@ -74,7 +71,7 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
     let func = c.vichan_post_fn.to_owned();
     let pass = c.verification_pass.to_owned();
     thread::spawn(move || {
-        println!("Tiemr run");
+        println!("Timer run");
         loop {
             let r = reqwest::Client::new();
             thread::sleep(Duration::from_secs(cooldown));
