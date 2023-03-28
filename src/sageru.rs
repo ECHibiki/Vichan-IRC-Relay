@@ -9,6 +9,8 @@ use std::sync::{Arc , Mutex};
 
 use std::thread;
 
+use regex::Regex;
+
 pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<String>){
 
 
@@ -46,6 +48,7 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                     if let Err(_) = log.write_all(line.as_bytes()){
                         println!("Could not write to log");
                     };
+                    let line = reverse_markup(line.to_owned());
                     match sageru_sender.send(line.to_owned()){
                         Err(e) => println!("Sageru - IRC => Vi Failed: {}", e),
                         __ => {}
@@ -67,6 +70,7 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                 Ok(m) => {
                     let m = m.replace("\n", ". ")
                         .replace("\r", "");
+                    let m = foreward_markup(m);
                     let m = "14Kissu-Chat: ".to_string() + &m;
                     let mut vi_writter = w_write.lock().unwrap();
                     if let Err(_) = vi_writter.write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
@@ -83,6 +87,54 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
     });
 
     
+}
+
+fn foreward_markup(mut msg: String) -> String{
+
+    msg = msg.replace("[b]", "")
+    .replace("[/b]", "")
+    .replace("[i]", "")
+    .replace("[/i]", "")
+    .replace("[ul]", "")
+    .replace("[/ul]", "")
+    .replace("[code]", "")
+    .replace("[/code]", "")
+    .replace("[s glowblue]", ",12")
+    .replace("[s glowpink]", ",13")
+    .replace("[s glowgreen]", ",10")
+    .replace("[s glowgold]", ",8")
+    .replace("[s heading]", "4")
+    .replace("[s spoiler]", "1,1")
+    .replace("[s quote]", "3")
+    .replace("[s yen]", "6")
+    .replace("[/s]", "");
+
+    let special_enter = Regex::new(r"\[[su] [^\]]*?\]").unwrap();
+    let special_exit = Regex::new(r"\[/[su]\]").unwrap();
+    let generic = Regex::new(r"\[/?(det|sum|str|sjis|)\]").unwrap();
+
+    let msg = special_enter.replace_all(&msg, "");
+    let msg = special_exit.replace_all(&msg, "");
+    let msg = generic.replace_all(&msg, "");
+
+    msg.to_string()
+}
+
+fn reverse_markup(msg: String) -> String{
+
+    let color = Regex::new(r"[0-9]*(,[0-9]+)?").unwrap();
+    let bold = Regex::new(r"(.*?)(|$|\n)").unwrap();
+    let ital = Regex::new(r"(.*?)(|$|\n)").unwrap();
+    let under = Regex::new(r"(.*?)(|$|\n)").unwrap();
+    let code = Regex::new(r"(.*?)(|$|\n)").unwrap();
+
+    let msg = color.replace_all(&msg, "");
+    let msg = bold.replace_all(&msg, "[b]$1[/b]");
+    let msg = ital.replace_all(&msg, "[i]$1[/i]");
+    let msg = under.replace_all(&msg, "[ul]$1[/ul]");
+    let msg = code.replace_all(&msg, "[code]$1[/code]");
+
+    msg.to_string()
 }
 
 fn is_chatter(message:&str) -> bool{
