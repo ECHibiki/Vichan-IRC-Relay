@@ -25,12 +25,14 @@ require_once "./inc/functions.php";
     }
     $posts_list = explode("\0" , $_POST["posts"]);
 
-    foreach($posts_list as &$post ){
-        $post = substr($post , strpos($post , ":", 1) + 1);
+    foreach($posts_list as $key=>$post ){
+        $posts_list[$key] = "" . substr($post , strpos($post , ":", 1) + 1);
     }
 
+    
     foreach($posts_list as $post ){		
-		$post = preg_replace("/cuck|nigger|incel/i", "-", $post);
+        var_dump($post);
+		$post_clean = "" . preg_replace("/cuck|nigger|incel/i", "-", $post);
         $query = prepare(sprintf("INSERT INTO ``posts_%s``(id, thread, subject, email, name, trip , capcode, body,
             body_nomarkup, time, bump, files, num_files, filehash, password, ip, sticky, locked, cycle, sage, embed, slug, wl_token, zombie) VALUES (
             NULL, :thread, :subject, :email, :name, :trip, :capcode, :body, :body_nomarkup,
@@ -42,9 +44,9 @@ require_once "./inc/functions.php";
         $query->bindValue(':trip', null, PDO::PARAM_NULL);
 
         $query->bindValue(':name', $name);
-        $query->bindValue(':body_nomarkup', "$post");
-        markup($post);
-        $query->bindValue(':body', $post);
+        $query->bindValue(':body_nomarkup', "$post_clean");
+        markup($post_clean);
+        $query->bindValue(':body', $post_clean);
         $query->bindValue(':time', time(), PDO::PARAM_INT);
         $query->bindValue(':password', "c9d030dldf" );
         $query->bindValue(':ip', $_SERVER['REMOTE_ADDR']);
