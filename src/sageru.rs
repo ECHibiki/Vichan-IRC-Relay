@@ -138,7 +138,7 @@ fn reverse_markup(msg: String) -> String{
 }
 
 fn is_chatter(message:&str) -> bool{
-    message.starts_with(":Anonymous!~anonymous@unknown PRIVMSG")
+    message.starts_with(":Anonymous")
 }
 
 fn is_about(message:&str , chan:&str , cmd:&str) -> bool{

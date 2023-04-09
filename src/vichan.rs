@@ -20,24 +20,23 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
         loop {
             println!("PIPE OPEN {}" ,  pipe);
             let mut fo:Option<File> = None;
-            while let None = fo  {
-                match  OpenOptions::new()
-                .read(true)
-                .open(pipe.to_owned()) {
-                    Ok(f) => {
-                        println!("Pipe found");
-                        fo = Some(f);   
-                    },
-                    Err(_e) => {
-                        // println!("{e}");
-                    }
+            match  OpenOptions::new()
+            .read(true)
+            .open(pipe.to_owned()) {
+                Ok(f) => {
+                    println!("Pipe found");
+                    fo = Some(f);   
+                },
+                Err(e) => {
+                    thread::sleep( Duration::from_secs(1) );
+                    println!("{e}");
                 }
             }
-            
-            let mut pipe_file = fo.unwrap();
+        
             let mut output = String::new();
             while let Ok(_) = pipe_file.read_to_string(&mut output) {
                 if output == "" {
+                    thread::sleep( Duration::from_secs(1) );
                     continue
                 }
                 match vi_sender.send( output.to_owned()) {
@@ -48,7 +47,6 @@ pub fn start(c:&Config , vi_sender:Sender<String> , sageru_reciever:Receiver<Str
             }
             println!("PIPE CLOSE");
         }
-        
     });
 
     // Wait on Sageru
