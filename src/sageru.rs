@@ -76,7 +76,7 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                     let m = m.replace("\n", "    ")
                         .replace("\r", "");
                     // slice into 400 char chunks
-                    let mut m = m.as_bytes();
+                    let m = m.as_bytes();
                     let mut m = m.chunks(400);
                     while let Some(chunk) = m.next(){
                         let chunk = foreward_markup(String::from_utf8_lossy(chunk).to_string());
@@ -87,12 +87,6 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                         } else{
                             _ = vi_writter.flush();
                         }
-                    }
-                    let mut vi_writter = w_write.lock().unwrap();
-                    if let Err(_) = vi_writter.write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
-                        println!("Could not write to about response");
-                    } else{
-                        _ = vi_writter.flush();
                     }
                 },
                 Err(e) => {
