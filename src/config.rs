@@ -31,7 +31,7 @@ pub fn parse_toml_file(p:String) -> Config{
         .get(config.vichan_post_url.to_owned() + &config.vichan_post_fn)
         .send()
         .unwrap();
-    config.about_notice = format!("{} ({})" , config.about_notice , r.text().unwrap().trim());
+    config.about_notice = format!("{}{}" , config.about_notice , r.text().unwrap().trim());
     println!("{}" , config.about_notice);
     config
 }

@@ -13,7 +13,6 @@ use regex::Regex;
 
 pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<String>){
 
-
     let  (mut reader, writter) = connect(&c.sageru_url , &c.sageru_port , &c.sageru_name, &c.sageru_channel);
 
     let mut log = OpenOptions::new()
@@ -34,9 +33,10 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
         println!("Waiting for Sageru Messages");
         let mut line = String::new();
         loop {
+            //println!("LOOP SAG");
             if let Ok(_) = reader.read_line(&mut line) {
                 if is_ignored(&line){
-    
+                   // println!("IS IGN");
                 } else if is_about(&line , &chan,  &about) {
                     let mut about_writter = w_read.lock().unwrap(); 
                     if let Err(_) = about_writter.write(format!("PRIVMSG {} :{}\r\n", chan , about_msg).as_bytes()) {
@@ -53,10 +53,13 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                         Err(e) => println!("Sageru - IRC => Vi Failed: {}", e),
                         __ => {}
                     }
-                }
+                } else{
+					println!("FAIL LN: {}" , line);
+				}
                 line.clear();
-            }else{
+            } else{
                 println!("IRC is down!");
+				std::process::exit(99);
             }
         } 
     });
@@ -66,12 +69,25 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
     let w_write = w.clone();
     thread::spawn(move || {
         loop {
+            //println!("LOOP READ VI");
             match vi_reciever.recv(){
                 Ok(m) => {
-                    let m = m.replace("\n", ". ")
+                    println!("OK");
+                    let m = m.replace("\n", "    ")
                         .replace("\r", "");
-                    let m = foreward_markup(m);
-                    let m = "14Kissu-Chat: ".to_string() + &m;
+                    // slice into 400 char chunks
+                    let mut m = m.as_bytes();
+                    let mut m = m.chunks(400);
+                    while let Some(chunk) = m.next(){
+                        let chunk = foreward_markup(String::from_utf8_lossy(chunk).to_string());
+                        let chunk = chunk + "0-@Kissu";
+                        let mut vi_writter = w_write.lock().unwrap();
+                        if let Err(_) = vi_writter.write(format!("PRIVMSG {} :{}\r\n", chan , chunk).as_bytes()) {
+                            println!("Could not write to about response");
+                        } else{
+                            _ = vi_writter.flush();
+                        }
+                    }
                     let mut vi_writter = w_write.lock().unwrap();
                     if let Err(_) = vi_writter.write(format!("PRIVMSG {} :{}\r\n", chan , m).as_bytes()) {
                         println!("Could not write to about response");
@@ -157,7 +173,7 @@ fn connect(url:  &str, port: &u16, name:&str, channel:&str) -> ( BufReader<TcpSt
     writeln!(stream, "NICK {}", name).expect("IRC Nick error");
     writeln!(stream, "USER {} 0 * :{}", name, name).expect("IRC User error");
     writeln!(stream, "JOIN {}", channel).expect("IRC Chan Join error");
-    writeln!(stream, "PRIVMSG {} :{}", channel , "14Kissu-Chat Ver0.0 (3!relay14 for info)" ).expect("IRC Chan Join error");
+    // writeln!(stream, "PRIVMSG {} :{}", channel , "14Kissu-Chat Ver0.0 (3!relay14 for info)" ).expect("IRC Chan Join error");
     
     ( BufReader::new(stream.try_clone().unwrap()) , BufWriter::new(stream.try_clone().unwrap()))
 }
