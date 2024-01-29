@@ -53,9 +53,7 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
                         Err(e) => println!("Sageru - IRC => Vi Failed: {}", e),
                         __ => {}
                     }
-                } else{
-					println!("FAIL LN: {}" , line);
-				}
+                } 
                 line.clear();
             } else{
                 println!("IRC is down!");
@@ -67,10 +65,10 @@ pub fn start(c:&Config , sageru_sender:Sender<String> , vi_reciever:Receiver<Str
     // Write from Vi
     let chan = c.sageru_channel.to_owned();
     let w_write = w.clone();
-    thread::spawn(move || {
+    thread::spawn(move || { 
         loop {
-            //println!("LOOP READ VI");
-            match vi_reciever.recv(){
+            //println!("LOOP READ VI"); 
+            match vi_reciever.recv(){  
                 Ok(m) => {
                     println!("OK");
                     let m = m.replace("\n", "    ")
@@ -118,6 +116,10 @@ fn foreward_markup(mut msg: String) -> String{
     .replace("[s quote]", "3")
     .replace("[s yen]", "6")
     .replace("[/s]", "");
+
+    msg = msg
+        .replace("&amp;", "&")
+        .replace("&#38;", "&");
 
     let special_enter = Regex::new(r"\[[su] [^\]]*?\]").unwrap();
     let special_exit = Regex::new(r"\[/[su]\]").unwrap();
